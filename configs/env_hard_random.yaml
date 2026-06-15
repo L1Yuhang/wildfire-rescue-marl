@@ -1,0 +1,25 @@
+difficulty: hard
+view_size: 7
+max_steps: 180
+fire_spread_interval: 5
+fire_spread_prob: 0.55
+smoke_radius: 2
+random_survivor: true
+random_fire: true
+max_fire_cells: 30
+reward:
+  discover: 40.0
+  pickup: 55.0
+  success: 150.0
+  uav_progress: 1.0
+  ugv_progress: 1.15
+  regress: -1.0
+  time: -0.12
+  wait: -0.07
+  invalid_uav: -3.5
+  invalid_ugv: -7.0
+  fire_collision: -90.0
+  survivor_burned: -120.0
+  smoke_risk: -1.3
+  near_fire_risk: -3.5
+  coordination: -0.15

@@ -1,0 +1,11 @@
+episode_seed,map_seed,success,steps,reward,delivered_count,discovered_count,burned_count,total_survivors,risk_exposure,terminated_reason
+1000,1009500,1,160,586.15,3,3,0,3,0.35,success
+1001,1010509,1,207,582.03,3,3,0,3,0.7,success
+1002,1011518,1,245,594.88,3,3,0,3,1.75,success
+1003,1012527,1,167,595.4,3,3,0,3,0.35,success
+1004,1013536,1,226,600.67,3,3,0,3,2.75,success
+1005,1014545,1,192,587.21,3,3,0,3,1.75,success
+1006,1015554,1,161,576.06,3,3,0,3,0.35,success
+1007,1016563,1,230,600.28,3,3,0,3,0.7,success
+1008,1017572,1,253,597.14,3,3,0,3,1.05,success
+1009,1018581,1,249,585.9,3,3,0,3,2.45,success

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local settings
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Reinforcement-learning generated artifacts
+outputs/models/
+outputs/logs/
+*.zip
+*.pt
+*.pth
+*.ckpt
+*.tensorboard
+
+# Local working notes and archives
+.local_archive/
+report/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

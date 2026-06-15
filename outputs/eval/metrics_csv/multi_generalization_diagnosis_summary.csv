@@ -1,0 +1,10 @@
+agent,success,reward,steps,delivered_count,discovered_count,burned_count,risk_exposure,timeout,fire_collision,survivor_burned,invalid_uav,invalid_ugv,uav_path_length,ugv_path_length,_rank,policy
+random,0.0,-450.7956,502.24,0.04,1.1,0.0,100.842,0.94,0.06,0.0,24.92,76.5,374.6,727.92,0,Random
+greedy,0.2,179.2372,414.02,1.6,2.32,0.0,66.387,0.72,0.08,0.0,0.0,0.0,60.38,101.26,1,Greedy
+dqn_coverage_bc,0.0,-1744.3362,492.8,0.14,1.28,0.0,28.089,0.92,0.08,0.0,228.0,321.14,208.66,60.48,2,Joint DQN-BC
+factorized_dqn_dagger_masked,0.0,19.8296,508.0,0.22,1.98,0.0,38.238,0.96,0.04,0.0,0.0,0.0,441.92,610.86,3,Factorized
+factorized_guided_dagger_masked,0.0,116.1304,512.48,0.48,2.78,0.0,9.078,0.98,0.02,0.0,0.0,0.0,221.94,798.46,4,Guided Factorized
+dedicated_dqn_ugv_astar_uav,0.04,142.1166,504.94,0.88,3.0,0.0,40.828,0.94,0.02,0.0,0.0,0.0,159.28,721.24,5,DQN UGV + A* UAV
+learned_uav_astar_ugv,0.84,517.2328,266.22,2.76,2.78,0.0,10.089,0.16,0.0,0.0,0.0,0.0,226.88,163.8,6,Learned UAV + A* UGV
+coverage_astar,1.0,589.5008,203.66,3.0,3.0,0.0,1.5590000000000002,0.0,0.0,0.0,0.0,0.0,159.26,177.04,7,Coverage A*
+astar,1.0,568.0527999999999,134.92,3.0,3.0,0.0,0.182,0.0,0.0,0.0,0.0,0.0,81.04,175.92,8,Oracle A*

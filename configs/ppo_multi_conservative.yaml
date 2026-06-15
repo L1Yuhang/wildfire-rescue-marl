@@ -1,0 +1,23 @@
+policy: MlpPolicy
+learning_rate: 0.00003
+n_steps: 1024
+batch_size: 256
+n_epochs: 4
+gamma: 0.995
+gae_lambda: 0.95
+clip_range: 0.08
+ent_coef: 0.001
+vf_coef: 0.5
+max_grad_norm: 0.5
+policy_kwargs:
+  net_arch:
+    pi:
+      - 256
+      - 256
+    vf:
+      - 256
+      - 256
+total_timesteps:
+  uav: 10000
+  ugv: 10000
+  full: 15000

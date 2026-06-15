@@ -1,0 +1,5 @@
+agent,difficulty,reward,steps,success,discovered,picked,fire_collision,survivor_burned,timeout,invalid_uav,invalid_ugv,risk_exposure,uav_path_length,ugv_path_length
+astar,medium,290.39999999999986,53.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,26.0,40.0
+dqn,medium,279.6519999999997,71.04,0.88,1.0,1.0,0.0,0.0,0.12,0.0,0.0,0.0,34.0,67.04
+greedy,medium,18.66000000000029,150.0,0.0,1.0,0.0,0.0,0.0,1.0,0.0,0.0,7.52,16.0,10.0
+random,medium,-467.18960000000027,147.8,0.0,0.34,0.0,0.02,0.0,0.98,11.34,46.36,127.04,106.06,71.72

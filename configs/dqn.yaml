@@ -1,0 +1,17 @@
+policy: MlpPolicy
+learning_rate: 0.0001
+buffer_size: 120000
+learning_starts: 1000
+batch_size: 128
+gamma: 0.985
+train_freq: 4
+gradient_steps: 1
+target_update_interval: 1000
+exploration_fraction: 0.35
+exploration_initial_eps: 1.0
+exploration_final_eps: 0.04
+total_timesteps:
+  easy: 70000
+  medium: 160000
+  hard: 300000
+

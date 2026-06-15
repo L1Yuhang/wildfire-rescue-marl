@@ -1,0 +1,36 @@
+experiment_name: multi_medium
+width: 26
+height: 26
+view_size: 7
+max_steps: 300
+num_ugv: 2
+num_survivors: 3
+max_survivors: 4
+num_fire_sources: 3
+fire_spread_interval: 9
+fire_spread_prob: 0.03
+smoke_radius: 2
+max_fire_cells: 32
+debris_burn_steps: 3
+map_seed: 42
+random_map: false
+road_spacing: 6
+wall_block_prob: 0.30
+debris_ratio: 0.05
+uav_view_radius: 3
+ugv_view_radius: 2
+reward:
+  time: -0.05
+  discover: 16.0
+  pickup: 30.0
+  deliver: 70.0
+  success: 150.0
+  uav_progress: 0.20
+  ugv_progress: 0.28
+  invalid_uav: -2.0
+  invalid_ugv: -4.0
+  risk_smoke: -0.35
+  risk_near_fire: -1.0
+  fire_collision: -90.0
+  survivor_burned: -90.0
+  debris_burned: 1.0

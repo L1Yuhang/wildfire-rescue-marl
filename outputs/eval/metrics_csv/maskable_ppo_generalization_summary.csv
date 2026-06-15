@@ -1,0 +1,14 @@
+agent,success,reward,steps,delivered_count,discovered_count,burned_count,risk_exposure,timeout,fire_collision,survivor_burned,invalid_uav,invalid_ugv,uav_path_length,ugv_path_length,policy,family,_rank
+greedy,0.2,179.2372,414.02,1.6,2.32,0.0,66.387,0.72,0.08,0.0,0.0,0.0,60.38,101.26,Greedy,Rule baseline,0
+ppo_uav,0.48,327.7072,372.4,1.94,2.02,0.0,19.082,0.52,0.0,0.0,0.0,0.0,120.4,111.82,PPO-UAV BC,PPO,1
+ppo_uav,0.38,289.5952,405.3,1.84,1.84,0.0,20.851,0.62,0.0,0.0,0.0,0.0,233.36,100.02,PPO-UAV Best,PPO,2
+maskppo_uav,0.78,492.0778,277.5,2.68,2.68,0.0,12.79,0.22,0.0,0.0,0.0,0.0,238.24,158.4,MaskablePPO-UAV BC,Masked PPO,3
+maskppo_uav,0.84,528.7158000000001,253.52,2.78,2.82,0.0,5.922999999999999,0.16,0.0,0.0,0.0,0.0,214.98,166.5,Masked BC seed3,Masked BC,4
+maskppo_uav,0.92,544.46,243.1,2.86,2.86,0.0,11.001,0.08,0.0,0.0,0.0,0.0,202.7,167.46,Masked BC seed4,Masked BC,5
+maskppo_uav,0.92,561.0980000000001,236.66,2.92,2.94,0.0,5.349,0.08,0.0,0.0,0.0,0.0,196.06,172.9,Masked BC + conservative PPO,Final PPO,6
+ppo_ugv,0.0,10.521,489.12,0.26,2.96,0.0,89.749,0.92,0.08,0.0,0.0,0.0,160.32,91.7,PPO-UGV Best,PPO,7
+maskppo_ugv,0.02,91.1062,498.36,0.46,2.98,0.0,37.699,0.94,0.04,0.0,0.0,0.0,158.28,780.82,MaskablePPO-UGV Best,Masked PPO,8
+maskppo_full,0.0,29.5166,497.92,0.28,2.3,0.0,50.865,0.94,0.06,0.0,0.0,0.0,338.22,660.08,Full MaskablePPO,Masked PPO,9
+learned_uav_astar_ugv,0.84,517.2328,266.22,2.76,2.78,0.0,10.089,0.16,0.0,0.0,0.0,0.0,226.88,163.8,DQN-UAV + A* UGV,Hybrid DQN,10
+coverage_astar,1.0,589.5008,203.66,3.0,3.0,0.0,1.5590000000000002,0.0,0.0,0.0,0.0,0.0,159.26,177.04,Coverage A*,Planning upper bound,11
+astar,1.0,568.0527999999999,134.92,3.0,3.0,0.0,0.182,0.0,0.0,0.0,0.0,0.0,81.04,175.92,Oracle A*,Planning upper bound,12
