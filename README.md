@@ -2,6 +2,30 @@
 
 本项目研究动态野火环境中的空地协同搜索与救援任务。智能体由无人机和地面无人车组成：无人机负责搜索并发现幸存者，地面无人车负责前往已发现目标、完成救援并返回基地。项目实现了规则规划、DQN、因子化 DQN、PPO、MaskablePPO 以及学习策略与 A* 规划混合的多条实验路线。
 
+## 核心可视化展示
+
+下面只展示最能代表实验结论的少量结果。完整 CSV、图表和视频路径见下一节。
+
+### 策略演示
+
+| 多 UGV 固定 Hard 地图：DQN-BC 完成救援 | 随机 Hard 地图：MaskablePPO-UAV + Coverage A* 成功案例 |
+| --- | --- |
+| <img src="outputs/videos/multi_dqn_hard_demo.gif" width="420" alt="多 UGV 固定 Hard 地图 DQN-BC 演示"> | <img src="outputs/videos/maskppo_uav_trueft_success_seed1000.gif" width="420" alt="MaskablePPO-UAV 加 Coverage A* 成功案例"> |
+
+### 最终结果图表
+
+| 固定地图多 UGV 成功率 | 随机 Hard 地图泛化成功率 |
+| --- | --- |
+| <img src="outputs/figures/multi_ugv/multi_all_success_rate.png" width="420" alt="固定地图多 UGV 成功率"> | <img src="outputs/figures/multi_ugv/generalization/generalization_success_rate.png" width="420" alt="随机 Hard 地图泛化成功率"> |
+
+| MaskablePPO 最终成功率 | MaskablePPO 风险暴露 | 最终策略雷达图 |
+| --- | --- | --- |
+| <img src="outputs/figures/multi_ugv/maskable_ppo/maskppo_success_rate.png" width="300" alt="MaskablePPO 成功率"> | <img src="outputs/figures/multi_ugv/maskable_ppo/maskppo_risk_exposure.png" width="300" alt="MaskablePPO 风险暴露"> | <img src="outputs/figures/multi_ugv/maskable_ppo/maskppo_final_policy_radar.png" width="300" alt="最终策略雷达图"> |
+
+### 训练过程概览
+
+<img src="outputs/figures/training_curves/08_all_training_returns_small_multiples.png" width="900" alt="训练曲线总览">
+
 ## 实验结果在哪里看
 
 优先查看下面这些已上传到仓库的结果文件。
@@ -24,7 +48,7 @@
 | [`outputs/figures/multi_ugv/ppo/`](outputs/figures/multi_ugv/ppo/) | PPO 诊断实验图表 |
 | [`outputs/figures/training_curves/`](outputs/figures/training_curves/) | 训练曲线与综合训练阶段对比 |
 
-主要演示视频在 [`outputs/videos/`](outputs/videos/)：
+更多演示视频在 [`outputs/videos/`](outputs/videos/)：
 
 - `multi_dqn_easy_demo.gif`、`multi_dqn_medium_demo.gif`、`multi_dqn_hard_demo.gif`：多 UGV 固定地图 DQN-BC 策略演示。
 - `learned_uav_astar_ugv_hard_random_guided_seed1000.gif`：学习型 UAV 与 A* UGV 的随机 Hard 地图混合策略演示。
@@ -199,7 +223,7 @@ conda run -n RLearning python scripts/plot_training_returns.py
 
 快速了解项目时，建议按这个顺序看：
 
-1. 打开 [`outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv`](outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv)，看最终随机 Hard 地图对比。
-2. 打开 [`outputs/figures/multi_ugv/maskable_ppo/`](outputs/figures/multi_ugv/maskable_ppo/)，看最终方法的成功率、风险和雷达图。
-3. 打开 [`outputs/videos/maskppo_uav_trueft_success_seed1000.gif`](outputs/videos/maskppo_uav_trueft_success_seed1000.gif)，直观看最终策略如何完成任务。
-4. 再看 [`outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv`](outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv)，理解为什么最终选择分层混合路线。
+1. 先看 README 顶部的核心动图和图表，快速理解最终策略效果。
+2. 打开 [`outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv`](outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv)，看最终随机 Hard 地图对比。
+3. 打开 [`outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv`](outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv)，理解为什么最终选择分层混合路线。
+4. 需要更多案例时，再进入 [`outputs/videos/`](outputs/videos/) 和 [`outputs/figures/`](outputs/figures/) 查看完整结果。
