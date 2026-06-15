@@ -1,166 +1,133 @@
-# Fire Rescue Multi-Agent Reinforcement Learning
+# 野火救援多智能体强化学习实验
 
-Course project: multi-agent air-ground cooperative search and rescue in a dynamic wildfire environment.
+本项目研究动态野火环境中的空地协同搜索与救援任务。智能体由无人机和地面无人车组成：无人机负责搜索并发现幸存者，地面无人车负责前往已发现目标、完成救援并返回基地。项目实现了规则规划、DQN、因子化 DQN、PPO、MaskablePPO 以及学习策略与 A* 规划混合的多条实验路线。
 
-Agents:
+## 实验结果在哪里看
 
-- UAV searches from the air and discovers survivors.
-- UGV moves on the ground, rescues discovered survivors, and returns to base.
+优先查看下面这些已上传到仓库的结果文件。
 
-Training uses a centralized DQN over joint actions:
+| 内容 | 路径 | 说明 |
+| --- | --- | --- |
+| 多 UGV 固定地图总表 | [`outputs/eval/metrics_csv/multi_summary_all.csv`](outputs/eval/metrics_csv/multi_summary_all.csv) | Easy、Medium、Hard 三个固定地图上的 A*、DQN-BC、Greedy、Random 对比 |
+| 随机 Hard 地图泛化诊断 | [`outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv`](outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv) | 联合 DQN、因子化 DQN、混合策略、Coverage A*、Oracle A* 对比 |
+| MaskablePPO 最终对比 | [`outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv`](outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv) | PPO、MaskablePPO、Masked BC、保守微调与规划上界对比 |
+| PPO 诊断结果 | [`outputs/eval/metrics_csv/ppo_generalization_summary.csv`](outputs/eval/metrics_csv/ppo_generalization_summary.csv) | PPO-UAV、PPO-UGV、Full PPO 的随机 Hard 地图结果 |
+| 单 UGV 汇总结果 | [`outputs/eval/metrics_csv/summary_all.csv`](outputs/eval/metrics_csv/summary_all.csv) | 单 UGV DQN 与基线方法对比 |
+
+主要图表在这些目录中：
+
+| 图表目录 | 说明 |
+| --- | --- |
+| [`outputs/figures/multi_ugv/`](outputs/figures/multi_ugv/) | 多 UGV 固定地图实验图表 |
+| [`outputs/figures/multi_ugv/generalization/`](outputs/figures/multi_ugv/generalization/) | 随机 Hard 地图泛化实验图表 |
+| [`outputs/figures/multi_ugv/maskable_ppo/`](outputs/figures/multi_ugv/maskable_ppo/) | MaskablePPO 修复实验图表 |
+| [`outputs/figures/multi_ugv/ppo/`](outputs/figures/multi_ugv/ppo/) | PPO 诊断实验图表 |
+| [`outputs/figures/training_curves/`](outputs/figures/training_curves/) | 训练曲线与综合训练阶段对比 |
+
+主要演示视频在 [`outputs/videos/`](outputs/videos/)：
+
+- `multi_dqn_easy_demo.gif`、`multi_dqn_medium_demo.gif`、`multi_dqn_hard_demo.gif`：多 UGV 固定地图 DQN-BC 策略演示。
+- `learned_uav_astar_ugv_hard_random_guided_seed1000.gif`：学习型 UAV 与 A* UGV 的随机 Hard 地图混合策略演示。
+- `maskppo_uav_trueft_success_seed1000.gif`：MaskablePPO-UAV 加 Coverage A* UGV 的成功案例。
+- `maskppo_uav_trueft_failure_seed1001.gif`：同一最终策略的失败案例，便于分析边界情况。
+- `ppo_uav_bc_success_seed1000.gif`、`ppo_uav_bc_failure_seed1001.gif`：普通 PPO-UAV 的成功与失败案例。
+
+模型权重和训练日志没有上传到 GitHub。它们会在本地运行脚本后生成到 `outputs/models/` 和 `outputs/logs/`，并被 `.gitignore` 排除。
+
+## 核心实验结论
+
+固定地图上的多 UGV 任务中，DQN-BC 可以复现 A* 专家轨迹并稳定完成救援：
+
+| 难度 | 方法 | 成功率 | 平均奖励 | 平均步数 | 平均送达人数 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Easy | DQN-BC | 1.00 | 415.20 | 92.00 | 2.00 |
+| Medium | DQN-BC | 1.00 | 526.42 | 86.00 | 3.00 |
+| Hard | DQN-BC | 1.00 | 544.17 | 104.00 | 3.00 |
+
+随机 Hard 地图上，纯端到端或全神经策略泛化较弱。表现更可靠的是分层混合方法，即学习型 UAV 搜索策略加 A* 地面救援规划：
+
+| 方法 | 成功率 | 平均奖励 | 平均步数 | 平均送达人数 | 风险暴露 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Joint DQN-BC | 0.00 | -1744.34 | 492.80 | 0.14 | 28.09 |
+| Guided Factorized DQN | 0.00 | 116.13 | 512.48 | 0.48 | 9.08 |
+| Learned UAV + A* UGV | 0.84 | 517.23 | 266.22 | 2.76 | 10.09 |
+| Masked BC + conservative PPO | 0.92 | 561.10 | 236.66 | 2.92 | 5.35 |
+| Coverage A* | 1.00 | 589.50 | 203.66 | 3.00 | 1.56 |
+| Oracle A* | 1.00 | 568.05 | 134.92 | 3.00 | 0.18 |
+
+最终可以概括为：
+
+- 低层联合动作空间较大，直接训练完整三智能体控制器不稳定。
+- 单纯 PPO 微调会破坏行为克隆得到的初始策略，普通 PPO 不是本任务的最优路线。
+- 动作掩码和 Masked BC 明显提升 PPO-UAV 分支。
+- 最强学习组件是 UAV 搜索策略；UGV 长程接送和返航更适合由显式安全路径规划处理。
+- Coverage A* 和 Oracle A* 是规划上界，不代表纯学习方法，但能帮助判断学习策略距离可达上限还有多远。
+
+## 项目任务
+
+环境是一个带动态火势、烟雾、障碍和幸存者的网格世界。任务目标是让多智能体团队在危险扩散前完成以下流程：
+
+```text
+UAV 搜索区域 -> 发现幸存者 -> UGV 前往救援 -> UGV 返回基地
+```
+
+单 UGV 版本使用中心化 DQN 控制联合动作：
 
 ```text
 joint_action = uav_action * 5 + ugv_action
 ```
 
-Use the requested conda environment:
+多 UGV 版本采用 `1 UAV + 2 UGV`，联合动作空间为：
+
+```text
+5^3 = 125
+```
+
+## 代码结构
+
+```text
+configs/                       实验配置文件
+scripts/                       训练、评估、渲染和绘图入口
+src/fire_rescue_rl/envs/        野火救援环境、地图生成、渲染、PPO 包装器
+src/fire_rescue_rl/agents/      A*、Greedy、Random、因子化策略等智能体
+src/fire_rescue_rl/utils/       指标、配置、随机种子、视频与绘图工具
+outputs/eval/metrics_csv/      已保存的评估 CSV
+outputs/figures/               已保存的实验图表
+outputs/videos/                已保存的演示视频
+```
+
+## 环境安装
+
+推荐使用课程要求的 Conda 环境名 `RLearning`：
 
 ```powershell
 conda activate RLearning
+pip install -r requirements.txt
 ```
 
-or:
+也可以用 `conda run` 直接执行脚本：
 
 ```powershell
 conda run -n RLearning python scripts/check_env.py
 ```
 
-See `PROJECT_PLAN.md` for the full experiment guide.
+主要依赖包括 `gymnasium`、`stable-baselines3`、`sb3-contrib`、`torch`、`numpy`、`pandas`、`matplotlib`、`seaborn`、`imageio` 和 `opencv-python`。
 
-## Current Verified Assets
+## 常用运行命令
 
-The following Easy workflow has been verified in `RLearning`:
+检查单 UGV 环境：
 
 ```powershell
 conda run -n RLearning python scripts/check_env.py
-conda run -n RLearning python scripts/train_dqn.py --config configs/env_easy.yaml --seed 2 --timesteps 60000 --expert-episodes 60
-conda run -n RLearning python scripts/eval_agents.py --difficulty easy --episodes 30 --seed 2 --include-rl
-conda run -n RLearning python scripts/render_demo.py --agent dqn --difficulty easy --format gif --seed 2
-conda run -n RLearning python scripts/render_demo.py --agent dqn --difficulty easy --format mp4 --seed 2
-conda run -n RLearning python scripts/plot_results.py
 ```
 
-Generated key files:
-
-```text
-outputs/models/dqn/dqn_easy_seed2_best.zip
-outputs/videos/dqn_easy_demo.gif
-outputs/videos/dqn_easy_demo.mp4
-outputs/figures/training_reward_curve.png
-outputs/figures/eval_success_rate.png
-```
-
-The verified Easy DQN policy completes the full sequence:
-
-```text
-UAV search -> survivor discovered -> UGV pickup -> UGV returns to base
-```
-
-The Medium experiment has also been completed with a larger 16x16 dynamic-fire map:
+检查多 UGV 环境：
 
 ```powershell
-conda run -n RLearning python scripts/train_dqn.py --config configs/env_medium.yaml --seed 0 --expert-episodes 60
-conda run -n RLearning python scripts/eval_agents.py --difficulty medium --episodes 50 --seed 0 --include-rl
-conda run -n RLearning python scripts/render_demo.py --agent dqn --difficulty medium --format gif --seed 0
-conda run -n RLearning python scripts/render_demo.py --agent dqn --difficulty medium --format mp4 --seed 0
+conda run -n RLearning python scripts/check_multi_env.py
 ```
 
-Medium DQN final evaluation over 50 episodes:
-
-```text
-DQN success rate: 0.88
-DQN average reward: 279.65
-DQN average steps: 71.04
-A* success rate: 1.00
-A* average steps: 53.00
-Greedy success rate: 0.00
-Random success rate: 0.00
-```
-
-Medium generated files:
-
-```text
-outputs/models/dqn/dqn_medium_seed0_best.zip
-outputs/models/dqn/dqn_medium_seed0.zip
-outputs/videos/dqn_medium_demo.gif
-outputs/videos/dqn_medium_demo.mp4
-outputs/videos/astar_medium_demo.gif
-outputs/eval/metrics_csv/summary_medium_seed0.csv
-outputs/figures/eval_success_rate.png
-outputs/figures/training_reward_curve.png
-```
-
-The Hard experiment has been completed on the 20x20 dynamic-fire map. Hard uses
-fixed survivor/fire positions for the main report experiment, while the fully
-randomized hard setting is kept separately as a diagnostic challenge in
-`configs/env_hard_random.yaml`.
-
-```powershell
-conda run -n RLearning python scripts/train_dqn.py --config configs/env_hard.yaml --seed 1 --timesteps 120000 --expert-episodes 120 --bc-episodes 160 --bc-steps 3000
-conda run -n RLearning python scripts/eval_agents.py --difficulty hard --episodes 50 --seed 1 --include-rl
-conda run -n RLearning python scripts/render_demo.py --agent dqn --difficulty hard --format gif --seed 1
-conda run -n RLearning python scripts/render_demo.py --agent dqn --difficulty hard --format mp4 --seed 1
-```
-
-Hard DQN final evaluation over 50 episodes:
-
-```text
-DQN success rate: 0.98
-DQN average reward: 355.10
-DQN average steps: 94.14
-A* success rate: 1.00
-A* average steps: 75.00
-Greedy success rate: 0.00
-Random success rate: 0.00
-```
-
-Hard generated files:
-
-```text
-outputs/models/dqn/dqn_hard_seed1_best.zip
-outputs/models/dqn/dqn_hard_seed1.zip
-outputs/videos/dqn_hard_seed1_demo.gif
-outputs/videos/dqn_hard_seed1_demo.mp4
-outputs/videos/astar_hard_demo.gif
-outputs/eval/metrics_csv/summary_hard_seed1.csv
-outputs/figures/render_review/dqn_hard_seed1_frame_00.png
-outputs/figures/render_review/dqn_hard_seed1_frame_01.png
-outputs/figures/render_review/dqn_hard_seed1_frame_02.png
-```
-
-## Final Multi-UGV Experiment Line
-
-The final project line uses `1 UAV + 2 UGV + multiple survivors` in
-`FireRescueMultiUGVEnv`.  The centralized action space is `5^3 = 125`.
-
-Main files:
-
-```text
-src/fire_rescue_rl/envs/generated_maps.py
-src/fire_rescue_rl/envs/fire_rescue_multi_ugv_env.py
-src/fire_rescue_rl/agents/astar_multi_ugv.py
-src/fire_rescue_rl/agents/multi_ugv_baselines.py
-scripts/train_multi_dqn.py
-scripts/eval_multi_dqn.py
-scripts/render_multi_policy.py
-scripts/plot_multi_all.py
-```
-
-The final DQN models are behavior-cloned from A* expert trajectories
-(`DQN-BC`).  This is intentional: direct DQN fine-tuning in the 125-action
-joint space was observed to degrade the policy, so the report should describe
-the final model as an expert-pretrained neural policy, not as pure exploration
-from scratch.
-
-Completed final results over 30 episodes:
-
-```text
-multi_easy:   DQN-BC success 1.00, reward 415.20, steps 92.00,  delivered 2/2
-multi_medium: DQN-BC success 1.00, reward 526.42, steps 86.00,  delivered 3/3
-multi_hard:   DQN-BC success 1.00, reward 544.17, steps 104.00, delivered 3/3
-```
-
-Key commands:
+复现多 UGV 固定 Hard 地图 DQN-BC 路线：
 
 ```powershell
 conda run -n RLearning python scripts/train_multi_dqn.py --config configs/env_multi_hard.yaml --seed 0 --timesteps 1 --expert-episodes 0 --bc-episodes 320 --bc-steps 5000 --eval-freq 10000
@@ -169,180 +136,70 @@ conda run -n RLearning python scripts/render_multi_policy.py --config configs/en
 conda run -n RLearning python scripts/plot_multi_all.py
 ```
 
-Final generated assets:
+复现随机 Hard 地图泛化诊断图：
 
-```text
-outputs/models/dqn_multi/dqn_multi_easy_seed0_bc.zip
-outputs/models/dqn_multi/dqn_multi_medium_seed0_bc.zip
-outputs/models/dqn_multi/dqn_multi_hard_seed0_bc.zip
-outputs/videos/multi_dqn_easy_demo.gif
-outputs/videos/multi_dqn_medium_demo.gif
-outputs/videos/multi_dqn_hard_demo.gif
-outputs/videos/multi_dqn_hard_demo.mp4
-outputs/figures/multi_ugv/multi_all_success_rate.png
-outputs/figures/multi_ugv/multi_all_average_reward.png
-outputs/figures/multi_ugv/multi_all_average_steps.png
-outputs/eval/metrics_csv/multi_summary_all.csv
+```powershell
+conda run -n RLearning python scripts/plot_generalization_results.py
 ```
 
-## Generalization Repair Experiments
+复现 PPO 诊断图：
 
-The stronger project line now uses random hard maps and explicitly reports the
-training failures instead of hiding them.  The key correction is that the new
-`CoverageAStarMultiUGVAgent` does not read hidden survivor coordinates for UAV
-search.  The UAV follows coverage waypoints, and UGVs only plan to survivors
-after they are discovered.
-
-New files:
-
-```text
-configs/env_multi_hard_random_explore.yaml
-configs/env_multi_hard_random_guided.yaml
-src/fire_rescue_rl/agents/factorized_q_policy.py
-scripts/train_factorized_multi_dqn.py
-scripts/plot_generalization_results.py
+```powershell
+conda run -n RLearning python scripts/plot_ppo_results.py
 ```
 
-Holdout evaluation on 50 random hard maps, seed 1000:
+复现 MaskablePPO 最终对比图：
 
-```text
-Joint DQN-BC:              success 0.00, delivered 0.14/3
-Factorized DQN-DAgger:     success 0.00, delivered 0.22/3
-Guided factorized DQN:     success 0.00, delivered 0.48/3, discovered 2.78/3
-DQN UGV + A* UAV:          success 0.04, delivered 0.88/3, discovered 3.00/3
-Learned UAV + A* UGV:      success 0.84, delivered 2.76/3
-Coverage A* upper bound:   success 1.00, delivered 3.00/3
-Oracle A* upper bound:     success 1.00, delivered 3.00/3
+```powershell
+conda run -n RLearning python scripts/plot_maskable_ppo_results.py
 ```
 
-Important interpretation: the all-neural three-agent controller is still not
-strong enough on random hard maps.  The reverse hybrid, A* UAV plus DQN UGV,
-was also tested after dedicated UGV-only training, but it reached only 4%
-success because the learned ground controller still struggles with long-horizon
-pickup and return.  The successful repair is the other hierarchical hybrid:
-a learned guided UAV search policy plus A* ground rescue planning.  This is the
-honest result to present for a high-quality report.
+生成训练曲线汇总：
 
-Generated assets:
-
-```text
-outputs/models/factorized_multi/factorized_multi_hard_random_guided_seed0_coverage.pt
-outputs/models/factorized_multi/factorized_multi_hard_random_guided_seed0_coverage_ugv.pt
-outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv
-outputs/figures/multi_ugv/generalization/generalization_success_rate.png
-outputs/figures/multi_ugv/generalization/generalization_delivered_count.png
-outputs/figures/multi_ugv/generalization/generalization_risk_exposure.png
-outputs/figures/multi_ugv/generalization/generalization_invalid_ugv.png
-outputs/figures/multi_ugv/generalization/guided_factorized_training_metrics.png
-outputs/videos/learned_uav_astar_ugv_hard_random_guided_seed1000.gif
-outputs/videos/learned_uav_astar_ugv_hard_random_guided_seed1000.mp4
+```powershell
+conda run -n RLearning python scripts/collect_training_returns.py
+conda run -n RLearning python scripts/plot_training_returns.py
 ```
 
-## PPO Experiment Line
+训练类脚本会重新生成模型和日志，耗时取决于机器配置。若只想查看结果，优先打开 `outputs/eval/metrics_csv/`、`outputs/figures/` 和 `outputs/videos/`。
 
-PPO was implemented as a separate experiment line with three wrappers:
+## 主要脚本说明
 
-```text
-PPO-UAV + A*UGV
-A*UAV + PPO-UGV
-Full PPO over MultiDiscrete([5, 5, 5])
-```
+| 脚本 | 用途 |
+| --- | --- |
+| `scripts/train_dqn.py` | 训练单 UGV DQN |
+| `scripts/eval_agents.py` | 评估单 UGV Random、Greedy、A*、DQN |
+| `scripts/render_demo.py` | 渲染单 UGV 策略演示 |
+| `scripts/train_multi_dqn.py` | 训练多 UGV DQN-BC |
+| `scripts/eval_multi_dqn.py` | 评估多 UGV DQN 与基线 |
+| `scripts/render_multi_policy.py` | 渲染多 UGV 策略演示 |
+| `scripts/train_factorized_multi_dqn.py` | 训练因子化多智能体 DQN |
+| `scripts/train_multi_ppo.py` | 训练普通 PPO 分支 |
+| `scripts/eval_multi_ppo.py` | 评估普通 PPO 分支 |
+| `scripts/train_multi_maskable_ppo.py` | 训练 MaskablePPO 分支 |
+| `scripts/eval_multi_maskable_ppo.py` | 评估 MaskablePPO 分支 |
+| `scripts/plot_multi_all.py` | 绘制固定地图多 UGV 对比图 |
+| `scripts/plot_generalization_results.py` | 绘制随机 Hard 泛化对比图 |
+| `scripts/plot_ppo_results.py` | 绘制 PPO 诊断图 |
+| `scripts/plot_maskable_ppo_results.py` | 绘制 MaskablePPO 最终对比图 |
 
-New files:
+## 方法路线
 
-```text
-src/fire_rescue_rl/envs/ppo_wrappers.py
-configs/ppo_multi.yaml
-configs/ppo_multi_conservative.yaml
-scripts/train_multi_ppo.py
-scripts/eval_multi_ppo.py
-scripts/render_multi_ppo.py
-scripts/plot_ppo_results.py
-```
+项目包含以下实验路线：
 
-Holdout results on 50 random hard maps, seed 1000:
+- 规则基线：Random、Greedy、A*、Coverage A*、Oracle A*。
+- 单 UGV DQN：用于验证基础空地协同救援流程。
+- 多 UGV DQN-BC：使用 A* 专家轨迹进行行为克隆，解决固定地图任务。
+- 因子化 DQN：尝试降低联合动作空间难度，用于随机 Hard 地图泛化诊断。
+- PPO：作为独立强化学习路线，包含 UAV、UGV 和完整联合控制三种包装器。
+- MaskablePPO：引入动作掩码，减少非法动作采样，并配合 Masked BC 和保守微调。
+- 分层混合策略：学习策略负责 UAV 搜索，A* 负责 UGV 安全救援路径规划。
 
-```text
-PPO-UAV BC:     success 0.48, delivered 1.94/3
-PPO-UAV Best:   success 0.38, delivered 1.84/3
-PPO-UGV BC:     success 0.00, delivered 0.32/3
-PPO-UGV Best:   success 0.00, delivered 0.26/3
-Full PPO BC:    success 0.00, delivered 0.06/3
-Full PPO Best:  success 0.00, delivered 0.12/3
-```
+## 阅读建议
 
-Interpretation: PPO does not solve the full random hard rescue problem under
-the current observation and low-level action design.  PPO-UAV is the strongest
-PPO branch, but PPO fine-tuning degraded the BC-initialized policy.  The result
-should be reported honestly as a negative/diagnostic PPO experiment, not as the
-final winning method.
+快速了解项目时，建议按这个顺序看：
 
-PPO assets:
-
-```text
-outputs/models/ppo_multi/ppo_multi_hard_random_guided_uav_seed0_bc.zip
-outputs/models/ppo_multi/ppo_multi_hard_random_guided_uav_seed0_best.zip
-outputs/models/ppo_multi/ppo_multi_hard_random_guided_ugv_seed0_best.zip
-outputs/models/ppo_multi/ppo_multi_hard_random_guided_full_seed0_best.zip
-outputs/eval/metrics_csv/ppo_generalization_summary.csv
-outputs/figures/multi_ugv/ppo/ppo_success_rate.png
-outputs/figures/multi_ugv/ppo/ppo_delivered_count.png
-outputs/figures/multi_ugv/ppo/ppo_training_reward_curves.png
-outputs/videos/ppo_uav_bc_success_seed1000.gif
-outputs/videos/ppo_uav_bc_success_seed1000.mp4
-outputs/videos/ppo_uav_bc_failure_seed1001.gif
-```
-
-## MaskablePPO Repair Line
-
-The PPO line was repaired with `sb3-contrib` MaskablePPO.  The important change
-is not cosmetic: invalid adjacent moves are masked before action sampling, and
-the behavior-cloning stage is also trained with the same action masks.  The
-best final model remains hierarchical: MaskablePPO controls UAV search, while
-Coverage A* controls the two UGV rescue vehicles.
-
-New/updated files:
-
-```text
-scripts/train_multi_maskable_ppo.py
-scripts/eval_multi_maskable_ppo.py
-scripts/render_multi_maskable_ppo.py
-scripts/check_maskable_env.py
-scripts/plot_maskable_ppo_results.py
-src/fire_rescue_rl/envs/ppo_wrappers.py
-```
-
-Final hard-random holdout results over 50 maps, seed 1000:
-
-```text
-PPO-UAV BC:                     success 0.48, delivered 1.94/3, risk 19.08
-MaskablePPO-UAV BC:             success 0.78, delivered 2.68/3, risk 12.79
-Masked BC seed3:                success 0.84, delivered 2.78/3, risk 5.92
-Masked BC seed4:                success 0.92, delivered 2.86/3, risk 11.00
-Masked BC + conservative PPO:   success 0.92, delivered 2.92/3, risk 5.35
-DQN-UAV + A* UGV:               success 0.84, delivered 2.76/3, risk 10.09
-Coverage A*:                    success 1.00, delivered 3.00/3, risk 1.56
-Oracle A*:                      success 1.00, delivered 3.00/3, risk 0.18
-```
-
-Interpretation: action masking and masked BC substantially improved the PPO
-branch.  Default PPO fine-tuning still degraded the 92% BC model to 70%, but
-true conservative fine-tuning kept 92% success and improved delivery count,
-risk, reward, and steps.  PPO-UGV and full low-level MaskablePPO remain weak,
-so the honest final claim is: the best learned component is UAV search; UGV
-transport is still better handled by explicit safe path planning.
-
-Key assets:
-
-```text
-outputs/models/maskable_ppo_multi/maskppo_multi_hard_random_guided_uav_seed4_true_conservative_ft.zip
-outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv
-outputs/figures/multi_ugv/maskable_ppo/maskppo_success_rate.png
-outputs/figures/multi_ugv/maskable_ppo/maskppo_delivered_count.png
-outputs/figures/multi_ugv/maskable_ppo/maskppo_risk_exposure.png
-outputs/figures/multi_ugv/maskable_ppo/maskppo_uav_optimization_path.png
-outputs/figures/multi_ugv/maskable_ppo/maskppo_final_policy_radar.png
-outputs/videos/maskppo_uav_trueft_success_seed1000.gif
-outputs/videos/maskppo_uav_trueft_success_seed1000.mp4
-outputs/videos/maskppo_uav_trueft_failure_seed1001.gif
-```
+1. 打开 [`outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv`](outputs/eval/metrics_csv/maskable_ppo_generalization_summary.csv)，看最终随机 Hard 地图对比。
+2. 打开 [`outputs/figures/multi_ugv/maskable_ppo/`](outputs/figures/multi_ugv/maskable_ppo/)，看最终方法的成功率、风险和雷达图。
+3. 打开 [`outputs/videos/maskppo_uav_trueft_success_seed1000.gif`](outputs/videos/maskppo_uav_trueft_success_seed1000.gif)，直观看最终策略如何完成任务。
+4. 再看 [`outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv`](outputs/eval/metrics_csv/multi_generalization_diagnosis_summary.csv)，理解为什么最终选择分层混合路线。
