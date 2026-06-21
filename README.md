@@ -1,4 +1,4 @@
-# wildfire rescue多智能体强化学习实验
+# wildfire rescue多智能体强化学习课程设计
 
 本项目研究动态wildfire环境中的空地协同搜索与救援任务。智能体由无人机和地面无人车组成：无人机负责搜索并发现幸存者，地面无人车负责前往已发现目标、完成救援并返回基地。项目实现了规则规划、DQN、因子化 DQN、PPO、MaskablePPO 以及学习策略与 A* 规划混合的多条实验路线。
 
@@ -26,9 +26,9 @@
 
 <img src="outputs/figures/training_curves/08_all_training_returns_small_multiples.png" width="900" alt="训练曲线总览">
 
-## 实验结果在哪里看
+## 实验结果
 
-优先查看下面这些已上传到仓库的结果文件。
+请查看以下已经上传到仓库的结果文件。
 
 | 内容 | 路径 | 说明 |
 | --- | --- | --- |
@@ -38,7 +38,7 @@
 | PPO 诊断结果 | [`outputs/eval/metrics_csv/ppo_generalization_summary.csv`](outputs/eval/metrics_csv/ppo_generalization_summary.csv) | PPO-UAV、PPO-UGV、Full PPO 的随机 Hard 地图结果 |
 | 单 UGV 汇总结果 | [`outputs/eval/metrics_csv/summary_all.csv`](outputs/eval/metrics_csv/summary_all.csv) | 单 UGV DQN 与基线方法对比 |
 
-主要图表在这些目录中：
+主要图表在以下目录中：
 
 | 图表目录 | 说明 |
 | --- | --- |
@@ -56,7 +56,6 @@
 - `maskppo_uav_trueft_failure_seed1001.gif`：同一最终策略的失败案例，便于分析边界情况。
 - `ppo_uav_bc_success_seed1000.gif`、`ppo_uav_bc_failure_seed1001.gif`：普通 PPO-UAV 的成功与失败案例。
 
-模型权重和训练日志没有上传到 GitHub。它们会在本地运行脚本后生成到 `outputs/models/` 和 `outputs/logs/`，并被 `.gitignore` 排除。
 
 ## 核心实验结论
 
@@ -122,7 +121,7 @@ outputs/videos/                已保存的演示视频
 
 ## 环境安装
 
-推荐使用课程要求的 Conda 环境名 `RLearning`：
+使用自行创建的 Conda 环境 `RLearning`：
 
 ```powershell
 conda activate RLearning
@@ -185,7 +184,7 @@ conda run -n RLearning python scripts/collect_training_returns.py
 conda run -n RLearning python scripts/plot_training_returns.py
 ```
 
-训练类脚本会重新生成模型和日志，耗时取决于机器配置。若只想查看结果，优先打开 `outputs/eval/metrics_csv/`、`outputs/figures/` 和 `outputs/videos/`。
+训练类脚本会重新生成模型和日志，耗时取决于机器配置。若只想查看结果，请查看 `outputs/eval/metrics_csv/`、`outputs/figures/` 和 `outputs/videos/`。
 
 ## 主要脚本说明
 
